@@ -12,7 +12,14 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -106,24 +113,24 @@ export default async function StudentRecordPage(props: PageProps<"/staff/student
         <div className="space-y-6 lg:col-span-2">
           {/* ---- Fees ---- */}
           <Card>
-            <CardHeader className="flex-row items-start justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base">Fees and payments</CardTitle>
-                <CardDescription>
-                  Balances are derived from the ledger every time this page loads.
-                </CardDescription>
-              </div>
-              <AssignFeeDialog
-                studentId={student.id}
-                academicYear={student.academicYear}
-                programme={{
-                  code: student.programme.code,
-                  defaultFeeAmount: serialiseMoney(student.programme.defaultFeeAmount),
-                  currency: student.programme.currency,
-                }}
-                disabled={student.status === "WITHDRAWN" || student.status === "COMPLETED"}
-                disabledReason={`${STATUS_LABEL[student.status]} students cannot be billed new fees`}
-              />
+            <CardHeader>
+              <CardTitle className="text-base">Fees and payments</CardTitle>
+              <CardDescription>
+                Balances are derived from the ledger every time this page loads.
+              </CardDescription>
+              <CardAction>
+                <AssignFeeDialog
+                  studentId={student.id}
+                  academicYear={student.academicYear}
+                  programme={{
+                    code: student.programme.code,
+                    defaultFeeAmount: serialiseMoney(student.programme.defaultFeeAmount),
+                    currency: student.programme.currency,
+                  }}
+                  disabled={student.status === "WITHDRAWN" || student.status === "COMPLETED"}
+                  disabledReason={`${STATUS_LABEL[student.status]} students cannot be billed new fees`}
+                />
+              </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
