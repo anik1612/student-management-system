@@ -35,7 +35,13 @@ export default async function StudentsPage(props: PageProps<"/staff/students">) 
 
   const [{ rows, total, page, pageCount }, programmes] = await Promise.all([
     listStudents(filter),
-    prisma.programme.findMany({ orderBy: { name: "asc" } }),
+    // Select only the columns the filter dropdown needs. Passing whole Programme rows would
+    // send `defaultFeeAmount` — a Decimal — across the Server/Client boundary, which React
+    // cannot serialise.
+    prisma.programme.findMany({
+      select: { id: true, code: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   return (
