@@ -7,9 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* next/font exposes Geist as --font-geist-sans; pointing --font-sans at itself (as the
+     shadcn init template does) resolves to nothing and drops the whole app to a serif fallback. */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -67,11 +69,20 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Chart ink.
+     --chart-1..4 are an ordinal blue ramp (light -> dark) used for ordered bands such as
+     arrears ageing; validated monotone, single-hue, with the light end clearing the surface.
+     --chart-good/neutral/critical are reserved *status* tokens: they mean settled / on
+     schedule / overdue, never series identity, and always ship beside a text label. */
+  --chart-1: #2a78d6;
+  --chart-2: #5598e7;
+  --chart-3: #86b6ef;
+  --chart-4: #184f95;
+  --chart-5: #256abf;
+  --chart-good: #0ca30c;
+  --chart-neutral: #c3c2b7;
+  --chart-critical: #d03b3b;
+  --chart-warning: #fab219;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -102,11 +113,16 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Dark steps chosen for the dark surface, not flipped from light. */
+  --chart-1: #3987e5;
+  --chart-2: #5598e7;
+  --chart-3: #86b6ef;
+  --chart-4: #184f95;
+  --chart-5: #256abf;
+  --chart-good: #0ca30c;
+  --chart-neutral: #52514e;
+  --chart-critical: #d03b3b;
+  --chart-warning: #fab219;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

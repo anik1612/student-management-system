@@ -85,6 +85,49 @@ export async function getDashboard(now = new Date()) {
     ? Math.round((Number(totals.paid) / Number(totals.billed)) * 100)
     : 100;
 
+  // Arrears ageing. Ordered bands, so the dashboard can show how *old* the debt is, not just
+  // how much — a registrar chases 90-day debt differently from last week's.
+  const AGE_BANDS = [
+    { key: "1-30", label: "1–30 days", min: 1, max: 30 },
+    { key: "31-60", label: "31–60 days", min: 31, max: 60 },
+    { key: "61-90", label: "61–90 days", min: 61, max: 90 },
+    { key: "90+", label: "Over 90 days", min: 91, max: Number.POSITIVE_INFINITY },
+  ];
+
+  const ageing = AGE_BANDS.map((band) => {
+    const matching = arrears.filter(
+      (a) => a.daysOverdue >= band.min && a.daysOverdue <= band.max,
+    );
+    return {
+      key: band.key,
+      label: band.label,
+      students: matching.length,
+      amount: serialiseMoney(
+        matching.reduce((sum, a) => sum + Number(a.overdueAmount), 0).toFixed(2),
+      ),
+    };
+  });
+
+  // Cash collected per month over the last six months — the trend behind the headline.
+  const payments = await prisma.payment.findMany({
+    select: { amount: true, paidOn: true },
+    orderBy: { paidOn: "asc" },
+  });
+
+  const collections: Array<{ key: string; label: string; amount: string; value: number }> = [];
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const start = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 1);
+    const inMonth = payments.filter((p) => p.paidOn >= start && p.paidOn < end);
+    const value = inMonth.reduce((sum, p) => sum + Number(p.amount), 0);
+    collections.push({
+      key: start.toISOString().slice(0, 7),
+      label: start.toLocaleDateString("en-GB", { month: "short" }),
+      amount: serialiseMoney(value.toFixed(2)),
+      value,
+    });
+  }
+
   return {
     students: {
       total: students.length,
@@ -98,6 +141,8 @@ export async function getDashboard(now = new Date()) {
       collectionRate,
     },
     arrears,
+    ageing,
+    collections,
     lateSubmissions: lateSubmissions.map((s) => ({
       id: s.id,
       studentId: s.student.studentId,
