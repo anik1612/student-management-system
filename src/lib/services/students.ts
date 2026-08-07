@@ -4,7 +4,7 @@ import { EnrolmentStatus, FeeType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 import { conflict, notFound, ruleViolation, validationError } from "@/lib/errors";
 import { summariseAccount } from "@/lib/domain/balance";
-import { checkTransition } from "@/lib/domain/status-machine";
+import { checkTransition, matchStatuses } from "@/lib/domain/status-machine";
 import { formatStudentId, intakeYearFromAcademicYear } from "@/lib/domain/student-id";
 import { serialiseMoney } from "@/lib/money";
 import { recordAudit } from "@/lib/services/audit";
@@ -144,30 +144,43 @@ export async function changeStudentStatus(
 }
 
 /**
- * One query for the whole student register: free text matches name, registry ID or email, ANDed
- * with the programme and status filters. Filters live in the URL so a view can be shared.
+ * One query for the whole student register.
+ *
+ * Free text matches everything on the brief — name, registry ID, email, programme (code or
+ * title) and enrolment status — ANDed with the dropdown filters. The dropdowns stay for precise
+ * filtering; the box is for "I know roughly what I am after". Filters live in the URL so a view
+ * can be shared.
  */
 export function buildStudentWhere(filter: StudentFilter): Prisma.StudentWhereInput {
   const where: Prisma.StudentWhereInput = {};
 
   if (filter.q) {
     const q = filter.q;
-    where.OR = [
+    const or: Prisma.StudentWhereInput[] = [
       { firstName: { contains: q, mode: "insensitive" } },
       { lastName: { contains: q, mode: "insensitive" } },
       { email: { contains: q, mode: "insensitive" } },
       { studentId: { contains: q, mode: "insensitive" } },
+      // Programme by code ("BSC-CS") or by title ("Computer Science").
+      { programme: { code: { contains: q, mode: "insensitive" } } },
+      { programme: { name: { contains: q, mode: "insensitive" } } },
     ];
+
     // "Amara Okafor" typed in full should still match a first/last name split.
     const parts = q.split(/\s+/).filter(Boolean);
     if (parts.length > 1) {
-      where.OR.push({
+      or.push({
         AND: [
           { firstName: { contains: parts[0], mode: "insensitive" } },
           { lastName: { contains: parts.slice(1).join(" "), mode: "insensitive" } },
         ],
       });
     }
+
+    const statuses = matchStatuses(q);
+    if (statuses.length > 0) or.push({ status: { in: statuses } });
+
+    where.OR = or;
   }
 
   if (filter.programmeId) where.programmeId = filter.programmeId;

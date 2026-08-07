@@ -75,3 +75,19 @@ export const STATUS_LABEL: Record<EnrolmentStatus, string> = {
   WITHDRAWN: "Withdrawn",
   COMPLETED: "Completed",
 };
+
+/**
+ * Statuses whose enum value or human label contains the typed text.
+ *
+ * The register's search box is expected to cover status as well as name, ID and programme, but
+ * status is an enum rather than a text column — so free text has to be resolved to the statuses
+ * it could mean before it can be queried. "completed", "Withdraw" and "defer" all find people.
+ */
+export function matchStatuses(query: string): EnrolmentStatus[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return Object.values(EnrolmentStatus).filter(
+    (status) =>
+      status.toLowerCase().includes(q) || STATUS_LABEL[status].toLowerCase().includes(q),
+  );
+}

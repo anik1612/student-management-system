@@ -48,7 +48,7 @@ export default async function StudentsPage(props: PageProps<"/staff/students">) 
     <>
       <PageHeader
         title="Student register"
-        description="Search by name, registry ID or email, and filter by programme, status or fee arrears."
+        description="Search by name, registry ID, email, programme or status — or filter precisely with the dropdowns."
         action={
           <Button asChild>
             <Link href="/staff/students/new">

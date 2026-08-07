@@ -66,7 +66,7 @@ export function StudentFilters({
           name="q"
           key={params.get("q") ?? ""}
           defaultValue={params.get("q") ?? ""}
-          placeholder="Name, registry ID or email…"
+          placeholder="Name, registry ID, email, programme or status…"
           className="pl-9"
           aria-label="Search students"
         />
