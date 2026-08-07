@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,20 @@ export function StudentFilters({
   const router = useRouter();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   function apply(patch: Record<string, string | undefined>) {
     const next = new URLSearchParams(params.toString());
+
+    // Carry whatever is currently typed in the search box, even if it was never submitted.
+    // Changing a dropdown otherwise dropped the text from the query while the input kept
+    // displaying it — the register looked like it was filtering by name when it was not.
+    if (!("q" in patch)) {
+      const typed = searchRef.current?.value.trim() ?? "";
+      if (typed) next.set("q", typed);
+      else next.delete("q");
+    }
+
     for (const [key, value] of Object.entries(patch)) {
       if (!value || value === ALL) next.delete(key);
       else next.set(key, value);
@@ -51,7 +62,9 @@ export function StudentFilters({
       <div className="relative min-w-56 flex-1">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          ref={searchRef}
           name="q"
+          key={params.get("q") ?? ""}
           defaultValue={params.get("q") ?? ""}
           placeholder="Name, registry ID or email…"
           className="pl-9"
@@ -60,7 +73,7 @@ export function StudentFilters({
       </div>
 
       <Select
-        defaultValue={params.get("programmeId") ?? ALL}
+        value={params.get("programmeId") ?? ALL}
         onValueChange={(value) => apply({ programmeId: value })}
       >
         <SelectTrigger className="w-48" aria-label="Filter by programme">
@@ -77,7 +90,7 @@ export function StudentFilters({
       </Select>
 
       <Select
-        defaultValue={params.get("status") ?? ALL}
+        value={params.get("status") ?? ALL}
         onValueChange={(value) => apply({ status: value })}
       >
         <SelectTrigger className="w-40" aria-label="Filter by status">
@@ -94,7 +107,7 @@ export function StudentFilters({
       </Select>
 
       <Select
-        defaultValue={params.get("arrears") ?? ALL}
+        value={params.get("arrears") ?? ALL}
         onValueChange={(value) => apply({ arrears: value })}
       >
         <SelectTrigger className="w-44" aria-label="Filter by fee state">
